@@ -1,0 +1,19 @@
+{
+  "name": "env-scry",
+  "version": "1.0.0",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "./node_modules/mocha/bin/mocha"
+  },
+  "author": "Matthew Chase Whittemore",
+  "dependencies": {
+    "node-dir": "^0.1.8"
+  },
+  "devDependencies": {
+    "mocha": "^2.0.1"
+  },
+  "license": "MIT"
+}
