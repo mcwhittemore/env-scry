@@ -15,5 +15,8 @@
   "devDependencies": {
     "mocha": "^2.0.1"
   },
+  "bin": {
+    "env-scry": "./bin/cli.js"
+  },
   "license": "MIT"
 }
