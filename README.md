@@ -1,4 +1,4 @@
-# Environment Builder
+# env-scry
 
 A simple tool for finding all the environment vars in both the active project and all of its dependencies.
 
