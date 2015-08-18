@@ -3,6 +3,7 @@
 var envScry = require("../");
 
 envScry(process.cwd(), function(err, modulesByEnvVars){
+	if (err) throw err;
 	var envVars = Object.keys(modulesByEnvVars);
 
 	var envVarsByTitle = {};
