@@ -9,9 +9,9 @@ module.exports = function(folder, cb) {
 			cb(err);
 		}
 		else {
-			var moduleNames = ["active"];
+			var moduleNames = ["main"];
 			var filesByModule = {
-				active: []
+				main: []
 			};
 			for (var i = 0; i < files.length; i++) {
 				var file = files[i].replace(folder, "");
@@ -23,7 +23,7 @@ module.exports = function(folder, cb) {
 						filesByModule[bits[2]].push(files[i]);
 					}
 					else {
-						filesByModule["active"].push(files[i]); // eslint-disable-line dot-notation
+						filesByModule["main"].push(files[i]); // eslint-disable-line dot-notation
 					}
 				}
 
