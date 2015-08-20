@@ -15,21 +15,21 @@ module.exports = function(folder, cb) {
 			};
 			for (var i = 0; i < files.length; i++) {
 				var file = files[i].replace(folder, "");
+				var fileParts = file.split(path.sep);
+				var lastIdx = fileParts.lastIndexOf("node_modules");
 
 				if (file.match(/\.js$/)) {
-					var bits = file.split(path.sep);
-					if (bits[1] === "node_modules") {
-						filesByModule[bits[2]] = filesByModule[bits[2]] || [];
-						filesByModule[bits[2]].push(files[i]);
+					if (lastIdx >= 0) {
+						var moduleName = fileParts[lastIdx + 1];
+						filesByModule[moduleName] = filesByModule[moduleName] || [];
+						filesByModule[moduleName].push(files[i]);
+						if (moduleNames.indexOf(moduleName) === -1) {
+							moduleNames.push(moduleName);
+						}
 					}
 					else {
 						filesByModule["main"].push(files[i]); // eslint-disable-line dot-notation
 					}
-				}
-
-				if (file.match(/^\/node_modules\/[a-z\-\_]*\/package\.json$/)) {
-					var moduleName = file.split(path.sep)[2];
-					moduleNames.push(moduleName);
 				}
 			}
 
