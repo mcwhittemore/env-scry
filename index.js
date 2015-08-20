@@ -4,9 +4,18 @@ var fs = require("fs");
 
 module.exports = function(folder, cb) {
 
-	dir.files(folder, function(err, files) {
+	var cwd = process.cwd();
+	process.chdir(folder);
+
+	// Wrap the original callback so we don't forget to change directory back
+	var cbWrapper = function () {
+		process.chdir(cwd);
+		cb.apply(null, arguments);
+	};
+
+	dir.files(process.cwd(), function(err, files) {
 		if (err) {
-			cb(err);
+			cbWrapper(err);
 		}
 		else {
 			var moduleNames = ["main"];
@@ -14,7 +23,7 @@ module.exports = function(folder, cb) {
 				main: []
 			};
 			for (var i = 0; i < files.length; i++) {
-				var file = files[i].replace(folder, "");
+				var file = files[i];
 				var fileParts = file.split(path.sep);
 				var lastIdx = fileParts.lastIndexOf("node_modules");
 
@@ -55,7 +64,7 @@ module.exports = function(folder, cb) {
 				}
 			}
 
-			cb(null, modulesByEnvVars);
+			cbWrapper(null, modulesByEnvVars);
 		}
 	});
 };
