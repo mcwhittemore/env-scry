@@ -2,60 +2,77 @@ var dir = require("node-dir");
 var path = require("path");
 var fs = require("fs");
 
-module.exports = function(folder, cb){
+module.exports = function(folder, cb) {
 
-	dir.files(folder, function(err, files) {
-		if(err){
-			cb(err);
+	var cwd = process.cwd();
+	process.chdir(folder);
+
+	// Wrap the original callback so we don't forget to change directory back
+	var cbWrapper = function () {
+		process.chdir(cwd);
+		cb.apply(null, arguments);
+	};
+
+	dir.files(process.cwd(), function(err, files) {
+		if (err) {
+			cbWrapper(err);
 		}
-		else{
-			var moduleNames = ["active"];
+		else {
+			var moduleNames = ["main"];
 			var filesByModule = {
-				active: []
+				main: []
 			};
-			for(var i=0; i<files.length; i++){
-				var file = files[i].replace(folder, "");
+			for (var i = 0; i < files.length; i++) {
+				var file = files[i];
+				var fileParts = file.split(path.sep);
+				var lastIdx = fileParts.lastIndexOf("node_modules");
 
-				if(file.match(/\.js$/)){
-					var bits = file.split(path.sep);
-					if(bits[1] == "node_modules"){
-						filesByModule[bits[2]] = filesByModule[bits[2]] || [];
-						filesByModule[bits[2]].push(files[i]);
+				if (file.match(/\.js$/)) {
+					if (lastIdx >= 0) {
+						var moduleName = fileParts[lastIdx + 1];
+						filesByModule[moduleName] = filesByModule[moduleName] || [];
+						filesByModule[moduleName].push(files[i]);
+						if (moduleNames.indexOf(moduleName) === -1) {
+							moduleNames.push(moduleName);
+						}
 					}
-					else{
-						filesByModule["active"].push(files[i]);
-					}
-				}
-
-				if(file.match(/^\/node_modules\/[a-z\-\_]*\/package\.json$/)){
-					var moduleName = file.split(path.sep)[2];
-					moduleNames.push(moduleName);
-				}
-			}
-
-			var modulesByEnvVars = {};
-
-			for(var i=0; i<moduleNames.length; i++){
-				var moduleName = moduleNames[i];
-
-				for(var j=0; j<filesByModule[moduleName].length; j++){
-					var file = filesByModule[moduleName][j];
-					var content = fs.readFileSync(file).toString();
-					
-					var envVars = content.match(/process\.env\.[a-zA-z_]*/);
-					if(envVars){
-						envVars.forEach(function(pev){
-							var ev = pev.split(".")[2];
-							modulesByEnvVars[ev] = modulesByEnvVars[ev] || [];
-							if(modulesByEnvVars[ev].indexOf(moduleName) === -1){
-								modulesByEnvVars[ev].push(moduleName);
-							}
-						});
+					else {
+						filesByModule.main.push(files[i]);
 					}
 				}
 			}
 
-			cb(null, modulesByEnvVars);
+			var modulesByEnvVars = moduleNames.reduce(function (map, moduleName) {
+				var mapModuleToEnvVars = createModuleToEnvVarsMapper(map, moduleName);
+				var files = filesByModule[moduleName];
+				files.forEach(function (file) {
+					mapEnvVarsFromFile(file, mapModuleToEnvVars);
+				});
+				return map;
+			}, {});
+
+			cbWrapper(null, modulesByEnvVars);
 		}
 	});
+};
+
+function createModuleToEnvVarsMapper (modulesByEnvVars, moduleName) {
+	return function mapModuleToEnvVars (envVar) {
+		modulesByEnvVars[envVar] = modulesByEnvVars[envVar] || [];
+		if (modulesByEnvVars[envVar].indexOf(moduleName) === -1) {
+			modulesByEnvVars[envVar].push(moduleName);
+		}
+	};
+}
+
+function mapEnvVarsFromFile (file, mapFn) {
+	var content = fs.readFileSync(file).toString();
+	var matches = content.match(/process\.env\.[a-zA-z_]*/);
+
+	if (matches) {
+		matches.forEach(function (match) {
+			var envVar = match.split(".")[2];
+			mapFn(envVar);
+		});
+	}
 }

@@ -2,22 +2,24 @@
 
 var envScry = require("../");
 
-envScry(process.cwd(), function(err, modulesByEnvVars){
+envScry(process.cwd(), function(err, modulesByEnvVars) {
+	if (err) {
+		throw err;
+	}
 	var envVars = Object.keys(modulesByEnvVars);
 
-	var envVarsByTitle = {};
-
-	for(var i=0; i< envVars.length; i++){
-		var ev = envVars[i];
-		var title = "# from "+modulesByEnvVars[ev].join(", ");
-		envVarsByTitle[title] = envVarsByTitle[title] || [];
-		envVarsByTitle[title].push(ev+"=\"\"");
-	}
+	var envVarsByTitle = envVars.reduce(function (map, envVar) {
+		var title = "# from " + modulesByEnvVars[envVar].join(", ");
+		map[title] = map[title] || [];
+		map[title].push(envVar + '=""'); // eslint-disable-line quotes
+		return map;
+	}, {});
 
 	var titles = Object.keys(envVarsByTitle);
+	var title;
 
-	for(var i=0; i<titles.length; i++){
-		var title = titles[i];
+	for (var i = 0; i < titles.length; i++) {
+		title = titles[i];
 		console.log(title);
 		console.log(envVarsByTitle[title].join("\n"), "\n");
 	}
