@@ -37,7 +37,7 @@ module.exports = function(folder, cb) {
 						}
 					}
 					else {
-						filesByModule["main"].push(files[i]); // eslint-disable-line dot-notation
+						filesByModule.main.push(files[i]);
 					}
 				}
 			}
