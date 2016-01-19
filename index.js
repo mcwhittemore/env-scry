@@ -67,7 +67,7 @@ function createModuleToEnvVarsMapper (modulesByEnvVars, moduleName) {
 
 function mapEnvVarsFromFile (file, mapFn) {
 	var content = fs.readFileSync(file).toString();
-	var matches = content.match(/process\.env\.[a-zA-z_]*/);
+	var matches = content.match(/process\.env\.[a-zA-Z0-9_]+/g);
 
 	if (matches) {
 		matches.forEach(function (match) {
